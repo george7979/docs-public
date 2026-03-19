@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Invoice Automation - Pipeline &amp; Modules</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  body {
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    padding: 48px 24px;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    color: #e0e0e0;
+  }
+  .container { max-width: 1100px; width: 100%; }
+  h1 { text-align: center; margin-bottom: 10px; font-size: 2.2rem; }
+  h2 { margin-top: 48px; margin-bottom: 24px; font-size: 1.5rem; color: #b0b0d0; border-bottom: 1px solid #333; padding-bottom: 8px; }
+  .subtitle { text-align: center; color: #999; margin-bottom: 40px; font-size: 1.15rem; }
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    font-size: 1.05rem;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .scope-table {
+    margin: 40px auto 0;
+    border-collapse: collapse;
+    font-size: 1.05rem;
+    width: 100%;
+    max-width: 860px;
+  }
+  .scope-table th {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 2px solid #333;
+    color: #999;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  .scope-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #2a2a3e;
+  }
+  .scope-table code {
+    background: #2d2d44;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+  }
+
+  /* Module cards */
+  .pipeline-order {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 40px 0 16px;
+    flex-wrap: wrap;
+    font-size: 1rem;
+  }
+  .pipeline-order .step {
+    background: #2d2d44;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-weight: 600;
+  }
+  .pipeline-order .arrow {
+    color: #666;
+    font-size: 1.2rem;
+  }
+  .pipeline-order .step.planned {
+    border-style: dashed;
+    color: #888;
+  }
+
+  .modules {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .module-card {
+    background: #16213e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    border-left: 4px solid #666;
+  }
+  .module-card.source-gmail { border-left-color: #ea4335; }
+  .module-card.source-ksef { border-left-color: #4285f4; }
+  .module-card.process { border-left-color: #666; }
+  .module-card.process-llm { border-left-color: #9c27b0; }
+  .module-card.storage { border-left-color: #ff9800; }
+  .module-card.storage-sheets { border-left-color: #34a853; }
+  .module-card.mark { border-left-color: #ea4335; }
+  .module-card.planned { border-left-style: dashed; opacity: 0.7; }
+
+  .module-card .module-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .module-card .module-id {
+    font-size: 0.85rem;
+    color: #888;
+    font-weight: 600;
+    min-width: 28px;
+  }
+  .module-card .module-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e0e0e0;
+  }
+  .module-card .module-file {
+    font-size: 0.85rem;
+    color: #666;
+    font-family: monospace;
+    margin-bottom: 10px;
+  }
+  .module-card .module-desc {
+    font-size: 0.95rem;
+    color: #bbb;
+    line-height: 1.5;
+  }
+  .module-card .module-details {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #999;
+    line-height: 1.5;
+  }
+  .module-card .module-details li {
+    margin-bottom: 4px;
+  }
+  .module-card .api-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+    margin-top: 10px;
+  }
+  .badge-gmail { background: #ea433533; color: #ea4335; border: 1px solid #ea433555; }
+  .badge-drive { background: #ff980033; color: #ff9800; border: 1px solid #ff980055; }
+  .badge-sheets { background: #34a85333; color: #34a853; border: 1px solid #34a85355; }
+  .badge-ksef { background: #4285f433; color: #4285f4; border: 1px solid #4285f455; }
+  .badge-llm { background: #9c27b033; color: #9c27b0; border: 1px solid #9c27b055; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Invoice Automation Pipeline</h1>
+<p class="subtitle">Self-hosted Docker app for automated invoice processing using Google APIs</p>
+
+<div class="legend">
+  <span class="legend-item"><span class="dot" style="background:#ea4335"></span> Gmail API</span>
+  <span class="legend-item"><span class="dot" style="background:#ff9800"></span> Google Drive API</span>
+  <span class="legend-item"><span class="dot" style="background:#34a853"></span> Google Sheets API</span>
+  <span class="legend-item"><span class="dot" style="background:#4285f4"></span> KSeF (Polish e-Invoice)</span>
+  <span class="legend-item"><span class="dot" style="background:#9c27b0"></span> Local LLM (Ollama)</span>
+</div>
+
+<pre class="mermaid">
+flowchart LR
+    subgraph INPUT["1. Data Sources"]
+        direction TB
+        GMAIL["Gmail Inbox\n(PDF attachments)"]
+        KSEF["KSeF API\n(XML invoices)"]
+    end
+
+    subgraph PROCESS["2. Processing Pipeline (Docker)"]
+        direction TB
+        FETCH["Fetch &amp; Download\ninvoice files"]
+        CLASSIFY["Classify\nverify NIP numbers"]
+        EXTRACT["Extract Data\nLLM reads invoice fields"]
+    end
+
+    subgraph OUTPUT["3. Organized Storage"]
+        direction TB
+        DRIVE["Google Drive\nfolders with PDFs/XMLs"]
+        SHEETS["Google Sheets\ninvoice register"]
+        LABEL["Gmail Labels\nmark as processed"]
+    end
+
+    GMAIL -- "read emails\ndownload PDFs" --> FETCH
+    KSEF -- "fetch XMLs" --> FETCH
+    FETCH --> CLASSIFY --> EXTRACT
+    EXTRACT -- "upload files" --> DRIVE
+    EXTRACT -- "append rows" --> SHEETS
+    EXTRACT -- "label + mark read" --> LABEL
+
+    style GMAIL fill:#2d2d44,stroke:#ea4335,color:#e0e0e0,stroke-width:2px
+    style KSEF fill:#2d2d44,stroke:#4285f4,color:#e0e0e0,stroke-width:2px
+    style FETCH fill:#2d2d44,stroke:#666,color:#e0e0e0
+    style CLASSIFY fill:#2d2d44,stroke:#666,color:#e0e0e0
+    style EXTRACT fill:#2d2d44,stroke:#9c27b0,color:#e0e0e0,stroke-width:2px
+    style DRIVE fill:#2d2d44,stroke:#ff9800,color:#e0e0e0,stroke-width:2px
+    style SHEETS fill:#2d2d44,stroke:#34a853,color:#e0e0e0,stroke-width:2px
+    style LABEL fill:#2d2d44,stroke:#ea4335,color:#e0e0e0,stroke-width:2px
+
+    style INPUT fill:#0f3460,stroke:#533483,color:#e0e0e0
+    style PROCESS fill:#16213e,stroke:#0f3460,color:#e0e0e0
+    style OUTPUT fill:#0f3460,stroke:#533483,color:#e0e0e0
+</pre>
+
+<h2>Pipeline Execution Order</h2>
+
+<div class="pipeline-order">
+  <span class="step" style="border-color:#4285f4">M6</span>
+  <span class="arrow">&rarr;</span>
+  <span class="step" style="border-color:#ea4335">M1</span>
+  <span class="arrow">&rarr;</span>
+  <span class="step" style="border-color:#666">M2</span>
+  <span class="arrow">&rarr;</span>
+  <span class="step planned" style="border-color:#666">M7</span>
+  <span class="arrow">&rarr;</span>
+  <span class="step" style="border-color:#9c27b0">M3</span>
+  <span class="arrow">&rarr;</span>
+  <span class="step" style="border-color:#ff9800">M4</span>
+  <span class="arrow">&rarr;</span>
+  <span class="step" style="border-color:#ea4335">M5</span>
+</div>
+
+<h2>Module Descriptions</h2>
+
+<div class="modules">
+
+  <div class="module-card source-ksef">
+    <div class="module-header">
+      <span class="module-id">M6</span>
+      <span class="module-name">KSeF Fetcher</span>
+    </div>
+    <div class="module-file">ksef_fetcher.py</div>
+    <div class="module-desc">
+      Connects to the Polish e-Invoice system (KSeF) and downloads XML invoices.
+    </div>
+    <ul class="module-details">
+      <li>Authenticates using XAdES-BES certificate signing</li>
+      <li>Queries KSeF API for new invoices since last run</li>
+      <li>Downloads FA(3) XML files and parses structured invoice data directly (no LLM needed)</li>
+      <li>Runs first &mdash; KSeF invoices are already structured, fast to process</li>
+    </ul>
+    <span class="api-badge badge-ksef">KSeF API</span>
+  </div>
+
+  <div class="module-card source-gmail">
+    <div class="module-header">
+      <span class="module-id">M1</span>
+      <span class="module-name">Email Fetcher</span>
+    </div>
+    <div class="module-file">email_fetcher.py</div>
+    <div class="module-desc">
+      Scans Gmail inbox for emails with PDF invoice attachments.
+    </div>
+    <ul class="module-details">
+      <li>Searches for unread emails matching invoice criteria</li>
+      <li>Downloads PDF and ZIP attachments</li>
+      <li>Extracts PDFs from ZIP archives</li>
+      <li>Passes downloaded files to the classification stage</li>
+    </ul>
+    <span class="api-badge badge-gmail">Gmail API &mdash; gmail.modify</span>
+  </div>
+
+  <div class="module-card process">
+    <div class="module-header">
+      <span class="module-id">M2</span>
+      <span class="module-name">Invoice Classifier</span>
+    </div>
+    <div class="module-file">invoice_classifier.py</div>
+    <div class="module-desc">
+      Determines if a PDF is actually an invoice and verifies seller identity.
+    </div>
+    <ul class="module-details">
+      <li>Regex-based NIP (tax ID) detection in PDF text</li>
+      <li>OCR fallback for scanned/image PDFs</li>
+      <li>Matches NIP against known contractors list</li>
+      <li>Rejects non-invoice documents (proformas, offers, etc.)</li>
+    </ul>
+  </div>
+
+  <div class="module-card planned">
+    <div class="module-header">
+      <span class="module-id">M7</span>
+      <span class="module-name">Input Sanitizer</span>
+    </div>
+    <div class="module-file">input_sanitizer.py</div>
+    <div class="module-desc">
+      Planned &mdash; defense against prompt injection in PDF content before LLM processing.
+    </div>
+    <ul class="module-details">
+      <li>Sandwich prompt technique (system instructions wrap user content)</li>
+      <li>Regex sanitizer strips suspicious patterns</li>
+      <li>Safeguard model pre-checks content before main LLM</li>
+    </ul>
+  </div>
+
+  <div class="module-card process-llm">
+    <div class="module-header">
+      <span class="module-id">M3</span>
+      <span class="module-name">Data Extractor</span>
+    </div>
+    <div class="module-file">data_extractor.py</div>
+    <div class="module-desc">
+      Uses local LLM (Ollama) to read invoice fields from PDF text.
+    </div>
+    <ul class="module-details">
+      <li>Sends PDF text content to Ollama with structured extraction prompt</li>
+      <li>Extracts: seller, buyer, amounts, dates, invoice number, line items</li>
+      <li>Returns structured JSON with all 19 spreadsheet columns</li>
+      <li>Handles various invoice formats (Polish and international)</li>
+    </ul>
+    <span class="api-badge badge-llm">Local LLM &mdash; Ollama</span>
+  </div>
+
+  <div class="module-card storage">
+    <div class="module-header">
+      <span class="module-id">M4</span>
+      <span class="module-name">Storage Manager</span>
+    </div>
+    <div class="module-file">storage_manager.py</div>
+    <div class="module-desc">
+      Organizes invoice files on Google Drive and registers them in Google Sheets.
+    </div>
+    <ul class="module-details">
+      <li>Creates monthly folders on Google Drive (e.g. "2026-03")</li>
+      <li>Uploads PDF/XML files with standardized naming</li>
+      <li>Appends invoice data row to Google Sheets register (19 columns)</li>
+      <li>Detects duplicates by invoice number before inserting</li>
+    </ul>
+    <span class="api-badge badge-drive">Drive API</span>
+    <span class="api-badge badge-sheets">Sheets API</span>
+  </div>
+
+  <div class="module-card mark">
+    <div class="module-header">
+      <span class="module-id">M5</span>
+      <span class="module-name">Email Marker</span>
+    </div>
+    <div class="module-file">email_marker.py</div>
+    <div class="module-desc">
+      Marks processed emails in Gmail to prevent reprocessing.
+    </div>
+    <ul class="module-details">
+      <li>Adds "Invoice" label to processed emails</li>
+      <li>Marks emails as read</li>
+      <li>Runs last &mdash; only after successful storage</li>
+    </ul>
+    <span class="api-badge badge-gmail">Gmail API &mdash; gmail.modify</span>
+  </div>
+
+</div>
+
+<h2>Google API Scopes</h2>
+
+<table class="scope-table">
+  <tr>
+    <th>Google API Scope</th>
+    <th>Used For</th>
+    <th>Access Type</th>
+  </tr>
+  <tr>
+    <td><code>gmail.modify</code></td>
+    <td>Read emails with PDF invoices, add "Invoice" label, mark as read</td>
+    <td>Read + Write</td>
+  </tr>
+  <tr>
+    <td><code>drive</code></td>
+    <td>Create monthly folders, upload invoice PDFs and XMLs</td>
+    <td>Write</td>
+  </tr>
+  <tr>
+    <td><code>spreadsheets</code></td>
+    <td>Create and maintain invoice register spreadsheet</td>
+    <td>Read + Write</td>
+  </tr>
+</table>
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'dark',
+  flowchart: {
+    useMaxWidth: true,
+    htmlLabels: true,
+    curve: 'basis',
+    nodeSpacing: 50,
+    rankSpacing: 90,
+    padding: 20
+  },
+  themeVariables: {
+    fontSize: '18px',
+    fontFamily: 'Segoe UI, sans-serif'
+  }
+});
+</script>
+</body>
+</html>
