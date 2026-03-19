@@ -6,4 +6,4 @@ Public documentation, diagrams, and interactive pages for private projects.
 
 | Document | Project | Link |
 |----------|---------|------|
-| Invoice Automation Pipeline | invoice-automation | [View](https://george7979.github.io/docs-public/invoice-automation-pipeline.html) |
+| Invoice Automation Dataflow | invoice-automation | [View](https://george7979.github.io/docs-public/invoice-automation-dataflow.html) |
